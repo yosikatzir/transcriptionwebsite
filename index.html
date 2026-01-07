@@ -177,6 +177,7 @@
         .editor-container {
             padding: 30px;
             overflow-y: auto;
+            position: relative;
         }
 
         .audio-controls {
@@ -184,6 +185,10 @@
             padding: 20px;
             border-radius: 8px;
             margin-bottom: 20px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
         }
 
         audio {
@@ -243,6 +248,8 @@
             min-height: 400px;
             line-height: 1.8;
             font-size: 16px;
+            direction: rtl;
+            text-align: right;
         }
 
         .phrase {
@@ -281,7 +288,9 @@
             margin: 15px 0;
             padding: 15px;
             border-radius: 8px;
-            border-left: 4px solid;
+            border-right: 4px solid;
+            direction: rtl;
+            text-align: right;
         }
 
         .speaker-label {
@@ -523,7 +532,7 @@
                     const turnContainer = document.createElement('div');
                     turnContainer.className = 'speaker-turn';
                     turnContainer.style.backgroundColor = speakerColor + '22';
-                    turnContainer.style.borderLeftColor = speakerColor;
+                    turnContainer.style.borderRightColor = speakerColor;
                     turnContainer.dataset.speaker = segment.speaker;
 
                     const startTime = segments[0].start;
@@ -727,13 +736,14 @@
 
             const editor = document.getElementById('textEditor');
 
-            // Find all elements (phrases or speaker turns) that are selected
-            const allElements = Array.from(editor.querySelectorAll('.phrase, .speaker-turn'));
+            // Find all top-level children (phrases or speaker turns) that are FULLY selected
+            const allChildren = Array.from(editor.children);
             const selectedElements = [];
             let segmentIndices = [];
 
-            allElements.forEach(element => {
-                if (selection.containsNode(element, true)) {
+            allChildren.forEach(element => {
+                // Check if this element is fully contained in the selection
+                if (selection.containsNode(element, false)) {
                     selectedElements.push(element);
 
                     // Collect segment indices
@@ -748,9 +758,39 @@
                 }
             });
 
+            // If no fully selected elements, check if selection is within a single element
+            if (selectedElements.length === 0) {
+                // Get the parent element of the selection
+                let container = range.commonAncestorContainer;
+
+                // Navigate up to find the actual phrase or speaker-turn element
+                while (container && container !== editor && !container.classList?.contains('phrase') && !container.classList?.contains('speaker-turn')) {
+                    container = container.parentNode;
+                }
+
+                if (container && (container.classList?.contains('phrase') || container.classList?.contains('speaker-turn'))) {
+                    let phraseEl = container;
+
+                    // If it's a speaker turn, get the phrase inside
+                    if (container.classList.contains('speaker-turn')) {
+                        phraseEl = container.querySelector('.phrase');
+                        selectedElements.push(container);
+                    } else {
+                        selectedElements.push(container);
+                    }
+
+                    // Collect segment indices
+                    if (phraseEl && phraseEl.dataset.segmentIndices) {
+                        segmentIndices.push(...JSON.parse(phraseEl.dataset.segmentIndices));
+                    } else if (phraseEl && phraseEl.dataset.index) {
+                        segmentIndices.push(parseInt(phraseEl.dataset.index));
+                    }
+                }
+            }
+
             if (selectedElements.length === 0) return;
 
-            // Get start and end times
+            // Get start and end times from first and last elements
             let startTime, endTime;
             const firstEl = selectedElements[0];
             const lastEl = selectedElements[selectedElements.length - 1];
@@ -780,7 +820,7 @@
             const turnContainer = document.createElement('div');
             turnContainer.className = 'speaker-turn';
             turnContainer.style.backgroundColor = selectedSpeaker.color + '22';
-            turnContainer.style.borderLeftColor = selectedSpeaker.color;
+            turnContainer.style.borderRightColor = selectedSpeaker.color;
             turnContainer.dataset.speaker = selectedSpeaker.id;
 
             const label = document.createElement('div');
@@ -790,7 +830,7 @@
 
             turnContainer.appendChild(label);
 
-            // Combine the text from all selected elements
+            // Use the actual selected text from the user's selection
             const textContainer = document.createElement('div');
             textContainer.className = 'phrase assigned';
             textContainer.style.backgroundColor = selectedSpeaker.color + '44';
@@ -799,16 +839,8 @@
             textContainer.dataset.end = endTime;
             textContainer.dataset.segmentIndices = JSON.stringify(segmentIndices);
 
-            let combinedText = selectedElements.map(el => {
-                if (el.classList.contains('speaker-turn')) {
-                    const textEl = el.querySelector('.phrase');
-                    return textEl ? textEl.textContent.trim() : '';
-                } else {
-                    return el.textContent.trim();
-                }
-            }).join(' ');
-
-            textContainer.textContent = combinedText;
+            // Use the selected text directly to avoid duplication
+            textContainer.textContent = selectedText;
 
             textContainer.addEventListener('click', (e) => {
                 if (audioElement && audioElement.src && !window.getSelection().toString()) {

@@ -7,6 +7,8 @@ A web-based tool for secretaries to edit AI-generated meeting transcriptions wit
 - **File Upload**: Load diarized JSON transcriptions and audio files (WAV, MP3, M4A)
 - **Pre-diarized Display**: Automatically displays existing speaker assignments from JSON
 - **Synchronized Playback**: Audio highlights the current phrase being played in real-time
+- **Sticky Controls**: Audio player and assignment buttons stay visible when scrolling through long transcriptions
+- **RTL Support**: Full right-to-left text support for Hebrew and other RTL languages
 - **Click to Play**: Click any phrase to jump to that timestamp in the audio
 - **Text Editing**: Edit transcription text directly in the browser (changes don't affect audio)
 - **Speaker Management**:
@@ -14,6 +16,7 @@ A web-based tool for secretaries to edit AI-generated meeting transcriptions wit
   - Add new speaker names
   - Edit existing speaker names by clicking them
   - Reassign speakers to text segments (overrides JSON diarization)
+  - Select partial text within speaker turns for reassignment
   - Color-coded speaker turns for easy identification
   - Condense multiple segments into single speaker turns
 - **Export**: Export edited transcription with speaker names to text file matching the output.txt format
@@ -61,12 +64,15 @@ A web-based tool for secretaries to edit AI-generated meeting transcriptions wit
 - Make corrections to transcription errors
 - Changes are saved in the editor
 - Editing doesn't affect the audio file
+- Text is displayed right-to-left for Hebrew and other RTL languages
+- You can select partial text within a speaker turn to create a new turn
 
 #### 7. Play Audio
-- Use the audio player controls at the top
+- Use the audio player controls at the top (stays visible while scrolling)
 - Click any text segment to jump to that timestamp in the audio
 - The currently playing phrase will be highlighted in yellow
 - Audio automatically scrolls to keep current phrase visible
+- Controls remain accessible even when viewing long transcriptions
 
 #### 8. Export
 - Click "Export Transcription" when done editing

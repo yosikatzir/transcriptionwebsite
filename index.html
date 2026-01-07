@@ -358,10 +358,11 @@
                 <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e0e0e0;">
                     <small style="color: #666;">
                         <strong>Instructions:</strong><br>
-                        1. Add speakers<br>
-                        2. Select a speaker<br>
-                        3. Highlight text<br>
-                        4. Click "Assign to Speaker"
+                        1. Add/edit speaker names<br>
+                        2. Click to select a speaker<br>
+                        3. Highlight text in editor<br>
+                        4. Click "Assign to Speaker"<br><br>
+                        <em>Tip: Click speaker names to edit them</em>
                     </small>
                 </div>
             </div>
@@ -381,9 +382,10 @@
 
                 <div class="instructions">
                     <strong>How to use:</strong>
-                    Upload your JSON transcription and audio file. Click any phrase to jump to that point in the audio.
-                    The currently playing phrase will be highlighted. Select text and assign it to speakers using the sidebar.
-                    Edit text directly by clicking on it.
+                    Upload your diarized JSON transcription and audio file. The transcription will display with existing speaker assignments.
+                    Click any text to jump to that timestamp in the audio. The currently playing phrase will be highlighted in yellow.
+                    To reassign speakers: select text, choose a speaker from the sidebar, and click "Assign to Speaker".
+                    Edit speaker names by clicking them in the sidebar. Edit transcription text directly by clicking it.
                 </div>
 
                 <div class="text-editor" id="textEditor" contenteditable="true"></div>
@@ -484,25 +486,107 @@
             editor.innerHTML = '';
             phraseElements = [];
 
-            transcriptionData.forEach((segment, index) => {
-                const phraseSpan = document.createElement('span');
-                phraseSpan.className = 'phrase';
-                phraseSpan.textContent = segment.text + ' ';
-                phraseSpan.dataset.start = segment.start;
-                phraseSpan.dataset.end = segment.end;
-                phraseSpan.dataset.index = index;
-                phraseSpan.dataset.originalText = segment.text;
-
-                phraseSpan.addEventListener('click', (e) => {
-                    if (audioElement && audioElement.src) {
-                        audioElement.currentTime = parseFloat(segment.start);
-                        audioElement.play();
-                    }
-                });
-
-                editor.appendChild(phraseSpan);
-                phraseElements.push(phraseSpan);
+            // Auto-populate speakers from JSON if they exist
+            const uniqueSpeakers = [...new Set(transcriptionData.map(s => s.speaker).filter(Boolean))];
+            uniqueSpeakers.forEach(speakerId => {
+                if (!speakers.find(s => s.id === speakerId)) {
+                    const color = SPEAKER_COLORS[speakers.length % SPEAKER_COLORS.length];
+                    speakers.push({
+                        id: speakerId,
+                        name: speakerId, // Default name is the ID, user can add custom name
+                        color: color
+                    });
+                }
             });
+            if (speakers.length > 0) {
+                renderSpeakers();
+            }
+
+            // Group consecutive segments by speaker
+            let i = 0;
+            while (i < transcriptionData.length) {
+                const segment = transcriptionData[i];
+
+                if (segment.speaker) {
+                    // Find consecutive segments with same speaker
+                    const speaker = speakers.find(s => s.id === segment.speaker);
+                    const speakerColor = speaker ? speaker.color : '#cccccc';
+                    const speakerName = speaker ? speaker.name : segment.speaker;
+
+                    let j = i;
+                    while (j < transcriptionData.length && transcriptionData[j].speaker === segment.speaker) {
+                        j++;
+                    }
+
+                    // Create speaker turn for segments i to j-1
+                    const segments = transcriptionData.slice(i, j);
+                    const turnContainer = document.createElement('div');
+                    turnContainer.className = 'speaker-turn';
+                    turnContainer.style.backgroundColor = speakerColor + '22';
+                    turnContainer.style.borderLeftColor = speakerColor;
+                    turnContainer.dataset.speaker = segment.speaker;
+
+                    const startTime = segments[0].start;
+                    const endTime = segments[segments.length - 1].end;
+
+                    const label = document.createElement('div');
+                    label.className = 'speaker-label';
+                    label.textContent = speakerName;
+                    label.innerHTML += `<span class="timestamp">(${formatTime(startTime)} - ${formatTime(endTime)})</span>`;
+
+                    turnContainer.appendChild(label);
+
+                    const textContainer = document.createElement('div');
+                    textContainer.className = 'phrase assigned';
+                    textContainer.style.backgroundColor = speakerColor + '44';
+                    textContainer.contentEditable = 'true';
+                    textContainer.dataset.start = startTime;
+                    textContainer.dataset.end = endTime;
+                    textContainer.dataset.segmentIndices = JSON.stringify(Array.from({length: j - i}, (_, k) => i + k));
+
+                    const combinedText = segments.map(s => s.text).join(' ');
+                    textContainer.textContent = combinedText;
+
+                    // Click to play audio
+                    textContainer.addEventListener('click', (e) => {
+                        if (audioElement && audioElement.src && !window.getSelection().toString()) {
+                            audioElement.currentTime = startTime;
+                            audioElement.play();
+                        }
+                    });
+
+                    // Track text changes
+                    textContainer.addEventListener('input', (e) => {
+                        // Text has been edited, we'll capture this during export
+                    });
+
+                    turnContainer.appendChild(textContainer);
+                    editor.appendChild(turnContainer);
+                    phraseElements.push(textContainer);
+
+                    i = j;
+                } else {
+                    // No speaker assigned, render as individual phrase
+                    const phraseSpan = document.createElement('span');
+                    phraseSpan.className = 'phrase';
+                    phraseSpan.textContent = segment.text + ' ';
+                    phraseSpan.dataset.start = segment.start;
+                    phraseSpan.dataset.end = segment.end;
+                    phraseSpan.dataset.index = i;
+                    phraseSpan.dataset.originalText = segment.text;
+
+                    phraseSpan.addEventListener('click', (e) => {
+                        if (audioElement && audioElement.src) {
+                            audioElement.currentTime = parseFloat(segment.start);
+                            audioElement.play();
+                        }
+                    });
+
+                    editor.appendChild(phraseSpan);
+                    phraseElements.push(phraseSpan);
+                    i++;
+                }
+            }
         }
 
         function updatePlayingHighlight() {
@@ -565,10 +649,47 @@
                     item.classList.add('selected');
                 }
 
-                item.innerHTML = `
-                    <span class="speaker-name">${speaker.name}</span>
-                    <div class="speaker-color" style="background-color: ${speaker.color}"></div>
-                `;
+                const nameSpan = document.createElement('span');
+                nameSpan.className = 'speaker-name';
+                nameSpan.textContent = speaker.name;
+                nameSpan.contentEditable = 'true';
+                nameSpan.style.cursor = 'text';
+
+                // Update speaker name on edit
+                nameSpan.addEventListener('blur', (e) => {
+                    const newName = e.target.textContent.trim();
+                    if (newName && newName !== speaker.name) {
+                        speaker.name = newName;
+                        // Update all speaker turns with this speaker
+                        document.querySelectorAll(`.speaker-turn[data-speaker="${speaker.id}"]`).forEach(turn => {
+                            const label = turn.querySelector('.speaker-label');
+                            if (label) {
+                                const timestamp = label.querySelector('.timestamp');
+                                const timestampHTML = timestamp ? timestamp.outerHTML : '';
+                                label.innerHTML = newName + timestampHTML;
+                            }
+                        });
+                    }
+                });
+
+                nameSpan.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        e.target.blur();
+                    }
+                });
+
+                // Prevent speaker selection when editing name
+                nameSpan.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                });
+
+                const colorDiv = document.createElement('div');
+                colorDiv.className = 'speaker-color';
+                colorDiv.style.backgroundColor = speaker.color;
+
+                item.appendChild(nameSpan);
+                item.appendChild(colorDiv);
 
                 item.addEventListener('click', () => {
                     selectedSpeaker = speaker;
@@ -604,27 +725,63 @@
 
             if (!selectedText) return;
 
-            // Get all phrase elements within selection
             const editor = document.getElementById('textEditor');
-            const selectedPhrases = [];
 
-            phraseElements.forEach(phrase => {
-                if (selection.containsNode(phrase, true)) {
-                    selectedPhrases.push(phrase);
+            // Find all elements (phrases or speaker turns) that are selected
+            const allElements = Array.from(editor.querySelectorAll('.phrase, .speaker-turn'));
+            const selectedElements = [];
+            let segmentIndices = [];
+
+            allElements.forEach(element => {
+                if (selection.containsNode(element, true)) {
+                    selectedElements.push(element);
+
+                    // Collect segment indices
+                    if (element.classList.contains('speaker-turn')) {
+                        const textEl = element.querySelector('.phrase');
+                        if (textEl && textEl.dataset.segmentIndices) {
+                            segmentIndices.push(...JSON.parse(textEl.dataset.segmentIndices));
+                        }
+                    } else if (element.dataset.index) {
+                        segmentIndices.push(parseInt(element.dataset.index));
+                    }
                 }
             });
 
-            if (selectedPhrases.length === 0) return;
+            if (selectedElements.length === 0) return;
 
-            // Create a speaker turn container
+            // Get start and end times
+            let startTime, endTime;
+            const firstEl = selectedElements[0];
+            const lastEl = selectedElements[selectedElements.length - 1];
+
+            if (firstEl.classList.contains('speaker-turn')) {
+                const textEl = firstEl.querySelector('.phrase');
+                startTime = parseFloat(textEl.dataset.start);
+            } else {
+                startTime = parseFloat(firstEl.dataset.start);
+            }
+
+            if (lastEl.classList.contains('speaker-turn')) {
+                const textEl = lastEl.querySelector('.phrase');
+                endTime = parseFloat(textEl.dataset.end);
+            } else {
+                endTime = parseFloat(lastEl.dataset.end);
+            }
+
+            // Update transcription data for all affected segments
+            segmentIndices.forEach(index => {
+                if (transcriptionData[index]) {
+                    transcriptionData[index].speaker = selectedSpeaker.id;
+                }
+            });
+
+            // Create new speaker turn container
             const turnContainer = document.createElement('div');
             turnContainer.className = 'speaker-turn';
             turnContainer.style.backgroundColor = selectedSpeaker.color + '22';
             turnContainer.style.borderLeftColor = selectedSpeaker.color;
             turnContainer.dataset.speaker = selectedSpeaker.id;
-
-            const startTime = parseFloat(selectedPhrases[0].dataset.start);
-            const endTime = parseFloat(selectedPhrases[selectedPhrases.length - 1].dataset.end);
 
             const label = document.createElement('div');
             label.className = 'speaker-label';
@@ -633,22 +790,22 @@
 
             turnContainer.appendChild(label);
 
-            // Combine the text
+            // Combine the text from all selected elements
             const textContainer = document.createElement('div');
             textContainer.className = 'phrase assigned';
             textContainer.style.backgroundColor = selectedSpeaker.color + '44';
             textContainer.contentEditable = 'true';
             textContainer.dataset.start = startTime;
             textContainer.dataset.end = endTime;
+            textContainer.dataset.segmentIndices = JSON.stringify(segmentIndices);
 
-            let combinedText = selectedPhrases.map(p => {
-                const text = p.textContent.trim();
-                // Update transcription data
-                const index = parseInt(p.dataset.index);
-                if (transcriptionData[index]) {
-                    transcriptionData[index].speaker = selectedSpeaker.id;
+            let combinedText = selectedElements.map(el => {
+                if (el.classList.contains('speaker-turn')) {
+                    const textEl = el.querySelector('.phrase');
+                    return textEl ? textEl.textContent.trim() : '';
+                } else {
+                    return el.textContent.trim();
                 }
-                return text;
             }).join(' ');
 
             textContainer.textContent = combinedText;
@@ -660,15 +817,19 @@
                 }
             });
 
+            textContainer.addEventListener('input', (e) => {
+                // Text has been edited
+            });
+
             turnContainer.appendChild(textContainer);
 
-            // Replace selected phrases with the turn container
-            const firstPhrase = selectedPhrases[0];
-            firstPhrase.parentNode.insertBefore(turnContainer, firstPhrase);
-            selectedPhrases.forEach(p => p.remove());
+            // Replace selected elements with the new turn container
+            const firstElement = selectedElements[0];
+            firstElement.parentNode.insertBefore(turnContainer, firstElement);
+            selectedElements.forEach(el => el.remove());
 
             // Update phrase elements array
-            phraseElements = phraseElements.filter(p => !selectedPhrases.includes(p));
+            phraseElements = phraseElements.filter(p => !selectedElements.includes(p) && !selectedElements.some(se => se.contains(p)));
             phraseElements.push(textContainer);
 
             // Clear selection
@@ -691,21 +852,24 @@
                 if (element.classList.contains('speaker-turn')) {
                     const speakerId = element.dataset.speaker;
                     const speaker = speakers.find(s => s.id === speakerId);
+                    const speakerName = speaker ? speaker.name : speakerId;
                     const textElement = element.querySelector('.phrase');
                     const text = textElement.textContent.trim();
                     const start = parseFloat(textElement.dataset.start);
                     const end = parseFloat(textElement.dataset.end);
 
-                    output.push(`[${speakerId}] (${start.toFixed(2)}-${end.toFixed(2)}): ${text}`);
+                    output.push(`[${speakerName}] (${start.toFixed(2)}-${end.toFixed(2)}): ${text}`);
                 } else if (element.classList.contains('phrase')) {
                     const text = element.textContent.trim();
                     const start = parseFloat(element.dataset.start);
                     const end = parseFloat(element.dataset.end);
                     const index = parseInt(element.dataset.index);
                     const speakerId = transcriptionData[index]?.speaker || 'UNASSIGNED';
+                    const speaker = speakers.find(s => s.id === speakerId);
+                    const speakerName = speaker ? speaker.name : speakerId;
 
                     if (text) {
-                        output.push(`[${speakerId}] (${start.toFixed(2)}-${end.toFixed(2)}): ${text}`);
+                        output.push(`[${speakerName}] (${start.toFixed(2)}-${end.toFixed(2)}): ${text}`);
                     }
                 }
             });

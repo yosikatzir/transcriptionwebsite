@@ -4,16 +4,19 @@ A web-based tool for secretaries to edit AI-generated meeting transcriptions wit
 
 ## Features
 
-- **File Upload**: Load JSON transcriptions and audio files (WAV, MP3, M4A)
-- **Synchronized Playback**: Audio highlights the current phrase being played
+- **File Upload**: Load diarized JSON transcriptions and audio files (WAV, MP3, M4A)
+- **Pre-diarized Display**: Automatically displays existing speaker assignments from JSON
+- **Synchronized Playback**: Audio highlights the current phrase being played in real-time
 - **Click to Play**: Click any phrase to jump to that timestamp in the audio
-- **Text Editing**: Edit transcription text directly in the browser
+- **Text Editing**: Edit transcription text directly in the browser (changes don't affect audio)
 - **Speaker Management**:
-  - Add speaker names
-  - Assign speakers to text segments
-  - Color-coded speaker turns
-  - Condense multiple phrases into single speaker turns
-- **Export**: Export edited transcription to text file matching the output.txt format
+  - Auto-populates speakers from diarized JSON
+  - Add new speaker names
+  - Edit existing speaker names by clicking them
+  - Reassign speakers to text segments (overrides JSON diarization)
+  - Color-coded speaker turns for easy identification
+  - Condense multiple segments into single speaker turns
+- **Export**: Export edited transcription with speaker names to text file matching the output.txt format
 
 ## How to Use on macOS
 
@@ -26,33 +29,50 @@ A web-based tool for secretaries to edit AI-generated meeting transcriptions wit
 ### Step-by-Step Workflow
 
 #### 1. Upload Files
-- **Upload Transcription JSON**: Click or drag your `transcription.json` file
+- **Upload Transcription JSON**: Click or drag your diarized `transcription_diarized.json` file
 - **Upload Audio File**: Click or drag your meeting audio (WAV, MP3, or M4A)
+- The transcription will automatically display with existing speaker assignments
 
-#### 2. Add Speakers
-- In the left sidebar, enter speaker names
+#### 2. Review Auto-populated Speakers
+- Speakers from the JSON are automatically added to the sidebar
+- Each speaker gets a unique color for easy identification
+- Default names will be the speaker IDs (e.g., "SPEAKER_01")
+
+#### 3. Edit Speaker Names
+- Click on any speaker name in the sidebar to edit it
+- Type the actual name (e.g., change "SPEAKER_01" to "John Smith")
+- Press Enter or click outside to save
+- Names will update throughout the transcription
+
+#### 4. Add New Speakers (Optional)
+- Enter a new speaker name in the input field
 - Click "Add Speaker" or press Enter
-- Each speaker gets a unique color automatically
+- Use this for speakers not in the original diarization
 
-#### 3. Assign Speakers to Text
+#### 5. Reassign Speakers (Override Diarization)
 - Click on a speaker in the sidebar to select them
-- Highlight the text you want to assign (can be one or multiple phrases)
+- Highlight the text you want to reassign (can span multiple turns)
 - Click "Assign to Speaker" button
-- The text will be color-coded and condensed into a single turn
+- The text will be reassigned to the new speaker with their color
+- This overrides the original JSON diarization
 
-#### 4. Edit Text
+#### 6. Edit Transcription Text
 - Click on any text to edit it directly
-- Changes are saved automatically
+- Make corrections to transcription errors
+- Changes are saved in the editor
 - Editing doesn't affect the audio file
 
-#### 5. Play Audio
+#### 7. Play Audio
 - Use the audio player controls at the top
-- Click any phrase to jump to that point in the audio
+- Click any text segment to jump to that timestamp in the audio
 - The currently playing phrase will be highlighted in yellow
+- Audio automatically scrolls to keep current phrase visible
 
-#### 6. Export
-- Click "Export Transcription" when done
-- Downloads a text file in the format: `[SPEAKER_ID] (start-end): text`
+#### 8. Export
+- Click "Export Transcription" when done editing
+- Downloads a text file with format: `[Speaker Name] (start-end): text`
+- Uses your edited speaker names, not the original IDs
+- Includes all your text edits
 
 ## Browser Recommendations
 
@@ -62,7 +82,8 @@ A web-based tool for secretaries to edit AI-generated meeting transcriptions wit
 
 ## Sample Files
 
-- `transcription.json` - Sample JSON transcription
+- `transcription.json` - Sample JSON transcription (without speaker diarization)
+- `transcription_diarized.json` - Sample diarized JSON with speaker assignments
 - `output.txt` - Example of expected export format
 
 ## Keyboard Shortcuts
@@ -81,6 +102,16 @@ A web-based tool for secretaries to edit AI-generated meeting transcriptions wit
 **JSON won't load:**
 - Verify JSON file is valid
 - Check that it contains an array of segments with `start`, `end`, and `text` fields
+- For diarized JSON, each segment should also have a `speaker` field (e.g., "SPEAKER_01")
+- Example segment format:
+  ```json
+  {
+    "start": 0.88,
+    "end": 17.14,
+    "text": "Meeting transcript text here",
+    "speaker": "SPEAKER_01"
+  }
+  ```
 
 **Export not working:**
 - Ensure you've loaded the transcription JSON first

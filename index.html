@@ -176,8 +176,9 @@
 
         .editor-container {
             padding: 30px;
-            overflow-y: auto;
             position: relative;
+            max-height: calc(100vh - 250px);
+            overflow-y: auto;
         }
 
         .audio-controls {
@@ -189,6 +190,15 @@
             top: 0;
             z-index: 100;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            margin-top: -30px;
+            margin-left: -30px;
+            margin-right: -30px;
+            padding-left: 30px;
+            padding-right: 30px;
+        }
+
+        .content-wrapper {
+            margin-top: 20px;
         }
 
         audio {
@@ -389,15 +399,17 @@
                     </div>
                 </div>
 
-                <div class="instructions">
-                    <strong>How to use:</strong>
-                    Upload your diarized JSON transcription and audio file. The transcription will display with existing speaker assignments.
-                    Click any text to jump to that timestamp in the audio. The currently playing phrase will be highlighted in yellow.
-                    To reassign speakers: select text, choose a speaker from the sidebar, and click "Assign to Speaker".
-                    Edit speaker names by clicking them in the sidebar. Edit transcription text directly by clicking it.
-                </div>
+                <div class="content-wrapper">
+                    <div class="instructions">
+                        <strong>How to use:</strong>
+                        Upload your diarized JSON transcription and audio file. The transcription will display with existing speaker assignments.
+                        Click any text to jump to that timestamp in the audio. The currently playing phrase will be highlighted in yellow.
+                        To reassign speakers: select text, choose a speaker from the sidebar, and click "Assign to Speaker".
+                        Edit speaker names by clicking them in the sidebar. Edit transcription text directly by clicking it.
+                    </div>
 
-                <div class="text-editor" id="textEditor" contenteditable="true"></div>
+                    <div class="text-editor" id="textEditor" contenteditable="true"></div>
+                </div>
             </div>
         </div>
     </div>

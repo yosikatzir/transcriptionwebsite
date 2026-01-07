@@ -1,0 +1,947 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>עריכת תמלול - Transcription Editor</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #f5f5f7;
+            color: #1d1d1f;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
+            overflow: hidden;
+        }
+
+        header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 2em;
+            font-weight: 600;
+        }
+
+        .upload-section {
+            padding: 30px;
+            background: #f9f9f9;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .upload-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .upload-box {
+            border: 2px dashed #ccc;
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .upload-box:hover {
+            border-color: #667eea;
+            background: #f0f0f0;
+        }
+
+        .upload-box.active {
+            border-color: #667eea;
+            background: #e8eaf6;
+        }
+
+        .upload-box input[type="file"] {
+            display: none;
+        }
+
+        .upload-label {
+            font-weight: 600;
+            color: #667eea;
+            display: block;
+            margin-bottom: 10px;
+        }
+
+        .file-name {
+            font-size: 0.9em;
+            color: #666;
+            margin-top: 10px;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 250px 1fr;
+            gap: 0;
+            min-height: 600px;
+        }
+
+        .sidebar {
+            background: #f9f9f9;
+            border-right: 1px solid #e0e0e0;
+            padding: 20px;
+        }
+
+        .sidebar h2 {
+            font-size: 1.2em;
+            margin-bottom: 15px;
+            color: #667eea;
+        }
+
+        .speaker-input-group {
+            margin-bottom: 15px;
+        }
+
+        .speaker-input-group input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        .speaker-input-group button {
+            width: 100%;
+            padding: 10px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background 0.3s;
+        }
+
+        .speaker-input-group button:hover {
+            background: #5568d3;
+        }
+
+        .speaker-list {
+            margin-top: 20px;
+        }
+
+        .speaker-item {
+            padding: 10px;
+            margin-bottom: 8px;
+            border-radius: 6px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border: 2px solid transparent;
+            transition: all 0.3s;
+        }
+
+        .speaker-item:hover {
+            border-color: #667eea;
+        }
+
+        .speaker-item.selected {
+            border-color: #667eea;
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+        }
+
+        .speaker-name {
+            font-weight: 600;
+            flex-grow: 1;
+        }
+
+        .speaker-color {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            border: 2px solid white;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .editor-container {
+            padding: 30px;
+            position: relative;
+            max-height: calc(100vh - 250px);
+            overflow-y: auto;
+        }
+
+        .audio-controls {
+            background: #f9f9f9;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            margin-top: -30px;
+            margin-left: -30px;
+            margin-right: -30px;
+            padding-left: 30px;
+            padding-right: 30px;
+        }
+
+        .content-wrapper {
+            margin-top: 20px;
+        }
+
+        audio {
+            width: 100%;
+            margin-bottom: 10px;
+        }
+
+        .controls-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .controls-buttons button {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .btn-assign {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-assign:hover:not(:disabled) {
+            background: #5568d3;
+        }
+
+        .btn-assign:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .btn-export {
+            background: #10b981;
+            color: white;
+        }
+
+        .btn-export:hover:not(:disabled) {
+            background: #059669;
+        }
+
+        .btn-export:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .text-editor {
+            background: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 20px;
+            min-height: 400px;
+            line-height: 1.8;
+            font-size: 16px;
+            direction: rtl;
+            text-align: right;
+        }
+
+        .phrase {
+            display: inline;
+            padding: 2px 0;
+            cursor: pointer;
+            transition: all 0.2s;
+            border-radius: 3px;
+        }
+
+        .phrase:hover {
+            background: #f0f0f0;
+        }
+
+        .phrase.playing {
+            background: #fef3c7;
+            font-weight: 600;
+            padding: 3px 6px;
+            margin: 0 2px;
+            border-radius: 4px;
+        }
+
+        .phrase.assigned {
+            padding: 3px 6px;
+            margin: 0 2px;
+            border-radius: 4px;
+        }
+
+        .phrase::selection {
+            background: #667eea;
+            color: white;
+        }
+
+        .speaker-turn {
+            display: block;
+            margin: 15px 0;
+            padding: 15px;
+            border-radius: 8px;
+            border-right: 4px solid;
+            direction: rtl;
+            text-align: right;
+        }
+
+        .speaker-label {
+            font-weight: 700;
+            font-size: 0.9em;
+            margin-bottom: 8px;
+            opacity: 0.8;
+        }
+
+        .timestamp {
+            font-size: 0.85em;
+            opacity: 0.6;
+            margin-left: 8px;
+        }
+
+        .instructions {
+            background: #e8eaf6;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 0.9em;
+            color: #4a5568;
+        }
+
+        .instructions strong {
+            color: #667eea;
+        }
+
+        @media (max-width: 1024px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+
+            .sidebar {
+                border-right: none;
+                border-bottom: 1px solid #e0e0e0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+                <header>
+            <div style="display: flex; align-items: center; justify-content: space-between;">
+                <div>
+                    <h1>עריכת תמלול - AI Transcription Editor</h1>
+                    <p>Edit and enhance your meeting transcriptions</p>
+                </div>
+                <a href="/meetings" style="background: rgba(255,255,255,0.2); color: white; padding: 10px 20px; border-radius: 6px; text-decoration: none; font-weight: 600;">← חזרה / Back</a>
+            </div>
+        </header>
+
+        <div class="main-content" style="margin-top: 0;">
+            <div class="sidebar">
+                <h2>Speakers</h2>
+                <div class="speaker-input-group">
+                    <input type="text" id="speakerNameInput" placeholder="Enter speaker name">
+                    <button onclick="addSpeaker()">Add Speaker</button>
+                </div>
+                <div class="speaker-list" id="speakerList"></div>
+
+                <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e0e0e0;">
+                    <small style="color: #666;">
+                        <strong>Instructions:</strong><br>
+                        1. Add/edit speaker names<br>
+                        2. Click to select a speaker<br>
+                        3. Highlight text in editor<br>
+                        4. Click "Assign to Speaker"<br><br>
+                        <em>Tip: Click speaker names to edit them</em>
+                    </small>
+                </div>
+            </div>
+
+            <div class="editor-container">
+                <div class="audio-controls">
+                    <audio id="audioPlayer" controls></audio>
+                    <div class="controls-buttons">
+                                                <button class="btn-assign" id="assignBtn" onclick="assignToSpeaker()" disabled>
+                            Assign to Speaker
+                        </button>
+                        <button class="btn-export" id="saveBtn" onclick="saveTranscription()" disabled style="background: #10b981;">
+                            שמור / Save
+                        </button>
+                        <button class="btn-export" id="loadOriginalBtn" onclick="loadOriginalTranscription()" disabled style="background: #f59e0b;">
+                            טען מקור / Load Original
+                        </button>
+                        <button class="btn-export" id="exportBtn" onclick="exportTranscription()" disabled>
+                            Export Transcription
+                        </button>
+                    </div>
+                </div>
+
+                <div class="content-wrapper">
+                    <div class="instructions">
+                        <strong>How to use:</strong>
+                        Upload your diarized JSON transcription and audio file. The transcription will display with existing speaker assignments.
+                        Click any text to jump to that timestamp in the audio. The currently playing phrase will be highlighted in yellow.
+                        To reassign speakers: select text, choose a speaker from the sidebar, and click "Assign to Speaker".
+                        Edit speaker names by clicking them in the sidebar. Edit transcription text directly by clicking it.
+                    </div>
+
+                    <div class="text-editor" id="textEditor" contenteditable="true"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let transcriptionData = [];
+        let speakers = [];
+        let selectedSpeaker = null;
+        let audioElement = null;
+        let currentPlayingPhrase = null;
+        let phraseElements = [];
+        let meetingId = null;
+
+        const SPEAKER_COLORS = [
+            '#ffadad', '#ffd6a5', '#fdffb6', '#caffbf',
+            '#9bf6ff', '#a0c4ff', '#bdb2ff', '#ffc6ff',
+            '#ff9e9e', '#ffcc99', '#ffffcc', '#ccffcc',
+            '#99ffff', '#ccccff', '#ffccff', '#ffb3b3'
+        ];
+
+        // Get meeting ID from URL
+        const pathParts = window.location.pathname.split('/');
+        meetingId = pathParts[pathParts.length - 1];
+
+        // Load meeting data on page load
+        loadMeetingData();
+
+        function renderTranscription() {
+            const editor = document.getElementById('textEditor');
+            editor.innerHTML = '';
+            phraseElements = [];
+
+            // Auto-populate speakers from JSON if they exist
+            const uniqueSpeakers = [...new Set(transcriptionData.map(s => s.speaker).filter(Boolean))];
+            uniqueSpeakers.forEach(speakerId => {
+                if (!speakers.find(s => s.id === speakerId)) {
+                    const color = SPEAKER_COLORS[speakers.length % SPEAKER_COLORS.length];
+                    speakers.push({
+                        id: speakerId,
+                        name: speakerId, // Default name is the ID, user can add custom name
+                        color: color
+                    });
+                }
+            });
+            if (speakers.length > 0) {
+                renderSpeakers();
+            }
+
+            // Group consecutive segments by speaker
+            let i = 0;
+            while (i < transcriptionData.length) {
+                const segment = transcriptionData[i];
+
+                if (segment.speaker) {
+                    // Find consecutive segments with same speaker
+                    const speaker = speakers.find(s => s.id === segment.speaker);
+                    const speakerColor = speaker ? speaker.color : '#cccccc';
+                    const speakerName = speaker ? speaker.name : segment.speaker;
+
+                    let j = i;
+                    while (j < transcriptionData.length && transcriptionData[j].speaker === segment.speaker) {
+                        j++;
+                    }
+
+                    // Create speaker turn for segments i to j-1
+                    const segments = transcriptionData.slice(i, j);
+                    const turnContainer = document.createElement('div');
+                    turnContainer.className = 'speaker-turn';
+                    turnContainer.style.backgroundColor = speakerColor + '22';
+                    turnContainer.style.borderRightColor = speakerColor;
+                    turnContainer.dataset.speaker = segment.speaker;
+
+                    const startTime = segments[0].start;
+                    const endTime = segments[segments.length - 1].end;
+
+                    const label = document.createElement('div');
+                    label.className = 'speaker-label';
+                    label.textContent = speakerName;
+                    label.innerHTML += `<span class="timestamp">(${formatTime(startTime)} - ${formatTime(endTime)})</span>`;
+
+                    turnContainer.appendChild(label);
+
+                    const textContainer = document.createElement('div');
+                    textContainer.className = 'phrase assigned';
+                    textContainer.style.backgroundColor = speakerColor + '44';
+                    textContainer.contentEditable = 'true';
+                    textContainer.dataset.start = startTime;
+                    textContainer.dataset.end = endTime;
+                    textContainer.dataset.segmentIndices = JSON.stringify(Array.from({length: j - i}, (_, k) => i + k));
+
+                    const combinedText = segments.map(s => s.text).join(' ');
+                    textContainer.textContent = combinedText;
+
+                    // Click to play audio
+                    textContainer.addEventListener('click', (e) => {
+                        if (audioElement && audioElement.src && !window.getSelection().toString()) {
+                            audioElement.currentTime = startTime;
+                            audioElement.play();
+                        }
+                    });
+
+                    // Track text changes
+                    textContainer.addEventListener('input', (e) => {
+                        // Text has been edited, we'll capture this during export
+                    });
+
+                    turnContainer.appendChild(textContainer);
+                    editor.appendChild(turnContainer);
+                    phraseElements.push(textContainer);
+
+                    i = j;
+                } else {
+                    // No speaker assigned, render as individual phrase
+                    const phraseSpan = document.createElement('span');
+                    phraseSpan.className = 'phrase';
+                    phraseSpan.textContent = segment.text + ' ';
+                    phraseSpan.dataset.start = segment.start;
+                    phraseSpan.dataset.end = segment.end;
+                    phraseSpan.dataset.index = i;
+                    phraseSpan.dataset.originalText = segment.text;
+
+                    phraseSpan.addEventListener('click', (e) => {
+                        if (audioElement && audioElement.src) {
+                            audioElement.currentTime = parseFloat(segment.start);
+                            audioElement.play();
+                        }
+                    });
+
+                    editor.appendChild(phraseSpan);
+                    phraseElements.push(phraseSpan);
+                    i++;
+                }
+            }
+        }
+
+        function updatePlayingHighlight() {
+            if (!audioElement) return;
+
+            const currentTime = audioElement.currentTime;
+
+            phraseElements.forEach(phrase => {
+                const start = parseFloat(phrase.dataset.start);
+                const end = parseFloat(phrase.dataset.end);
+
+                if (currentTime >= start && currentTime <= end) {
+                    if (currentPlayingPhrase !== phrase) {
+                        if (currentPlayingPhrase) {
+                            currentPlayingPhrase.classList.remove('playing');
+                        }
+                        phrase.classList.add('playing');
+                        currentPlayingPhrase = phrase;
+
+                        // Scroll into view
+                        phrase.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }
+                } else {
+                    phrase.classList.remove('playing');
+                }
+            });
+        }
+
+        function addSpeaker() {
+            const input = document.getElementById('speakerNameInput');
+            const name = input.value.trim();
+
+            if (!name) {
+                alert('Please enter a speaker name');
+                return;
+            }
+
+            const color = SPEAKER_COLORS[speakers.length % SPEAKER_COLORS.length];
+            const speaker = {
+                id: 'SPEAKER_' + (speakers.length + 1).toString().padStart(2, '0'),
+                name: name,
+                color: color
+            };
+
+            speakers.push(speaker);
+            input.value = '';
+            renderSpeakers();
+        }
+
+        function renderSpeakers() {
+            const list = document.getElementById('speakerList');
+            list.innerHTML = '';
+
+            speakers.forEach((speaker, index) => {
+                const item = document.createElement('div');
+                item.className = 'speaker-item';
+                item.style.backgroundColor = speaker.color + '33';
+
+                if (selectedSpeaker && selectedSpeaker.id === speaker.id) {
+                    item.classList.add('selected');
+                }
+
+                const nameSpan = document.createElement('span');
+                nameSpan.className = 'speaker-name';
+                nameSpan.textContent = speaker.name;
+                nameSpan.contentEditable = 'true';
+                nameSpan.style.cursor = 'text';
+
+                // Update speaker name on edit
+                nameSpan.addEventListener('blur', (e) => {
+                    const newName = e.target.textContent.trim();
+                    if (newName && newName !== speaker.name) {
+                        speaker.name = newName;
+                        // Update all speaker turns with this speaker
+                        document.querySelectorAll(`.speaker-turn[data-speaker="${speaker.id}"]`).forEach(turn => {
+                            const label = turn.querySelector('.speaker-label');
+                            if (label) {
+                                const timestamp = label.querySelector('.timestamp');
+                                const timestampHTML = timestamp ? timestamp.outerHTML : '';
+                                label.innerHTML = newName + timestampHTML;
+                            }
+                        });
+                    }
+                });
+
+                nameSpan.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        e.target.blur();
+                    }
+                });
+
+                // Prevent speaker selection when editing name
+                nameSpan.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                });
+
+                const colorDiv = document.createElement('div');
+                colorDiv.className = 'speaker-color';
+                colorDiv.style.backgroundColor = speaker.color;
+
+                item.appendChild(nameSpan);
+                item.appendChild(colorDiv);
+
+                item.addEventListener('click', () => {
+                    selectedSpeaker = speaker;
+                    renderSpeakers();
+                    updateAssignButton();
+                });
+
+                list.appendChild(item);
+            });
+        }
+
+        function updateAssignButton() {
+            const assignBtn = document.getElementById('assignBtn');
+            const selection = window.getSelection();
+            const hasSelection = selection.toString().trim().length > 0;
+            assignBtn.disabled = !(selectedSpeaker && hasSelection);
+        }
+
+        // Monitor text selection
+        document.addEventListener('selectionchange', updateAssignButton);
+
+        function assignToSpeaker() {
+            if (!selectedSpeaker) {
+                alert('Please select a speaker first');
+                return;
+            }
+
+            const selection = window.getSelection();
+            if (!selection.rangeCount) return;
+
+            const range = selection.getRangeAt(0);
+            const selectedText = selection.toString().trim();
+
+            if (!selectedText) return;
+
+            const editor = document.getElementById('textEditor');
+
+            // Find all top-level children (phrases or speaker turns) that are FULLY selected
+            const allChildren = Array.from(editor.children);
+            const selectedElements = [];
+            let segmentIndices = [];
+
+            allChildren.forEach(element => {
+                // Check if this element is fully contained in the selection
+                if (selection.containsNode(element, false)) {
+                    selectedElements.push(element);
+
+                    // Collect segment indices
+                    if (element.classList.contains('speaker-turn')) {
+                        const textEl = element.querySelector('.phrase');
+                        if (textEl && textEl.dataset.segmentIndices) {
+                            segmentIndices.push(...JSON.parse(textEl.dataset.segmentIndices));
+                        }
+                    } else if (element.dataset.index) {
+                        segmentIndices.push(parseInt(element.dataset.index));
+                    }
+                }
+            });
+
+            // If no fully selected elements, check if selection is within a single element
+            if (selectedElements.length === 0) {
+                // Get the parent element of the selection
+                let container = range.commonAncestorContainer;
+
+                // Navigate up to find the actual phrase or speaker-turn element
+                while (container && container !== editor && !container.classList?.contains('phrase') && !container.classList?.contains('speaker-turn')) {
+                    container = container.parentNode;
+                }
+
+                if (container && (container.classList?.contains('phrase') || container.classList?.contains('speaker-turn'))) {
+                    let phraseEl = container;
+
+                    // If it's a speaker turn, get the phrase inside
+                    if (container.classList.contains('speaker-turn')) {
+                        phraseEl = container.querySelector('.phrase');
+                        selectedElements.push(container);
+                    } else {
+                        selectedElements.push(container);
+                    }
+
+                    // Collect segment indices
+                    if (phraseEl && phraseEl.dataset.segmentIndices) {
+                        segmentIndices.push(...JSON.parse(phraseEl.dataset.segmentIndices));
+                    } else if (phraseEl && phraseEl.dataset.index) {
+                        segmentIndices.push(parseInt(phraseEl.dataset.index));
+                    }
+                }
+            }
+
+            if (selectedElements.length === 0) return;
+
+            // Get start and end times from first and last elements
+            let startTime, endTime;
+            const firstEl = selectedElements[0];
+            const lastEl = selectedElements[selectedElements.length - 1];
+
+            if (firstEl.classList.contains('speaker-turn')) {
+                const textEl = firstEl.querySelector('.phrase');
+                startTime = parseFloat(textEl.dataset.start);
+            } else {
+                startTime = parseFloat(firstEl.dataset.start);
+            }
+
+            if (lastEl.classList.contains('speaker-turn')) {
+                const textEl = lastEl.querySelector('.phrase');
+                endTime = parseFloat(textEl.dataset.end);
+            } else {
+                endTime = parseFloat(lastEl.dataset.end);
+            }
+
+            // Update transcription data for all affected segments
+            segmentIndices.forEach(index => {
+                if (transcriptionData[index]) {
+                    transcriptionData[index].speaker = selectedSpeaker.id;
+                }
+            });
+
+            // Create new speaker turn container
+            const turnContainer = document.createElement('div');
+            turnContainer.className = 'speaker-turn';
+            turnContainer.style.backgroundColor = selectedSpeaker.color + '22';
+            turnContainer.style.borderRightColor = selectedSpeaker.color;
+            turnContainer.dataset.speaker = selectedSpeaker.id;
+
+            const label = document.createElement('div');
+            label.className = 'speaker-label';
+            label.textContent = selectedSpeaker.name;
+            label.innerHTML += `<span class="timestamp">(${formatTime(startTime)} - ${formatTime(endTime)})</span>`;
+
+            turnContainer.appendChild(label);
+
+            // Use the actual selected text from the user's selection
+            const textContainer = document.createElement('div');
+            textContainer.className = 'phrase assigned';
+            textContainer.style.backgroundColor = selectedSpeaker.color + '44';
+            textContainer.contentEditable = 'true';
+            textContainer.dataset.start = startTime;
+            textContainer.dataset.end = endTime;
+            textContainer.dataset.segmentIndices = JSON.stringify(segmentIndices);
+
+            // Use the selected text directly to avoid duplication
+            textContainer.textContent = selectedText;
+
+            textContainer.addEventListener('click', (e) => {
+                if (audioElement && audioElement.src && !window.getSelection().toString()) {
+                    audioElement.currentTime = startTime;
+                    audioElement.play();
+                }
+            });
+
+            textContainer.addEventListener('input', (e) => {
+                // Text has been edited
+            });
+
+            turnContainer.appendChild(textContainer);
+
+            // Replace selected elements with the new turn container
+            const firstElement = selectedElements[0];
+            firstElement.parentNode.insertBefore(turnContainer, firstElement);
+            selectedElements.forEach(el => el.remove());
+
+            // Update phrase elements array
+            phraseElements = phraseElements.filter(p => !selectedElements.includes(p) && !selectedElements.some(se => se.contains(p)));
+            phraseElements.push(textContainer);
+
+            // Clear selection
+            selection.removeAllRanges();
+            updateAssignButton();
+        }
+
+        function formatTime(seconds) {
+            const mins = Math.floor(seconds / 60);
+            const secs = Math.floor(seconds % 60);
+            return `${mins}:${secs.toString().padStart(2, '0')}`;
+        }
+
+        function exportTranscription() {
+            const editor = document.getElementById('textEditor');
+            const elements = Array.from(editor.children);
+            let output = [];
+
+            elements.forEach(element => {
+                if (element.classList.contains('speaker-turn')) {
+                    const speakerId = element.dataset.speaker;
+                    const speaker = speakers.find(s => s.id === speakerId);
+                    const speakerName = speaker ? speaker.name : speakerId;
+                    const textElement = element.querySelector('.phrase');
+                    const text = textElement.textContent.trim();
+                    const start = parseFloat(textElement.dataset.start);
+                    const end = parseFloat(textElement.dataset.end);
+
+                    output.push(`[${speakerName}] (${start.toFixed(2)}-${end.toFixed(2)}): ${text}`);
+                } else if (element.classList.contains('phrase')) {
+                    const text = element.textContent.trim();
+                    const start = parseFloat(element.dataset.start);
+                    const end = parseFloat(element.dataset.end);
+                    const index = parseInt(element.dataset.index);
+                    const speakerId = transcriptionData[index]?.speaker || 'UNASSIGNED';
+                    const speaker = speakers.find(s => s.id === speakerId);
+                    const speakerName = speaker ? speaker.name : speakerId;
+
+                    if (text) {
+                        output.push(`[${speakerName}] (${start.toFixed(2)}-${end.toFixed(2)}): ${text}`);
+                    }
+                }
+            });
+
+            const blob = new Blob([output.join('\n')], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'edited_transcription.txt';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        // Allow Enter key in speaker input
+        document.getElementById('speakerNameInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                addSpeaker();
+            }
+        });
+
+        // Backend integration functions
+        async function loadMeetingData() {
+            try {
+                // Load transcription
+                const transcriptionResponse = await fetch(`/api/meeting/${meetingId}/transcription`);
+                if (!transcriptionResponse.ok) {
+                    throw new Error('Transcription not found');
+                }
+
+                const transcriptionData_response = await transcriptionResponse.json();
+                transcriptionData = transcriptionData_response.transcription;
+
+                renderTranscription();
+                document.getElementById('exportBtn').disabled = false;
+                document.getElementById('saveBtn').disabled = false;
+                document.getElementById('loadOriginalBtn').disabled = false;
+
+                // Load audio
+                audioElement = document.getElementById('audioPlayer');
+                audioElement.src = `/api/meeting/${meetingId}/audio`;
+                audioElement.addEventListener('timeupdate', updatePlayingHighlight);
+
+            } catch (error) {
+                console.error('Error loading meeting data:', error);
+                alert('שגיאה בטעינת הנתונים / Error loading meeting data: ' + error.message);
+            }
+        }
+
+        async function saveTranscription() {
+            if (!meetingId) {
+                alert('Meeting ID not found');
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/meeting/${meetingId}/save`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        transcription: transcriptionData
+                    })
+                });
+
+                if (response.ok) {
+                    alert('התמלול נשמר בהצלחה! / Transcription saved successfully!');
+                } else {
+                    throw new Error('Failed to save transcription');
+                }
+            } catch (error) {
+                console.error('Error saving transcription:', error);
+                alert('שגיאה בשמירה / Save error: ' + error.message);
+            }
+        }
+
+        async function loadOriginalTranscription() {
+            if (!confirm('לטעון תמלול מקורי? כל השינויים שלא נשמרו יאבדו.\nLoad original transcription? All unsaved changes will be lost.')) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/meeting/${meetingId}/transcription/original`);
+                if (!response.ok) {
+                    throw new Error('Original transcription not found');
+                }
+
+                const data = await response.json();
+                transcriptionData = data.transcription;
+                speakers = []; // Reset speakers
+                renderTranscription();
+                alert('התמלול המקורי נטען / Original transcription loaded');
+            } catch (error) {
+                console.error('Error loading original transcription:', error);
+                alert('שגיאה בטעינת תמלול מקורי / Error loading original: ' + error.message);
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>העלאת פגישה חדשה - Upload New Meeting</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #f5f5f7;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
+            overflow: hidden;
+        }
+
+        header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+        }
+
+        .header-content {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        h1 {
+            font-size: 2em;
+            font-weight: 600;
+        }
+
+        .back-btn {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            transition: background 0.3s;
+        }
+
+        .back-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .form-container {
+            padding: 40px;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #1d1d1f;
+        }
+
+        .label-sub {
+            display: block;
+            font-weight: normal;
+            font-size: 0.9em;
+            color: #666;
+            margin-top: 4px;
+        }
+
+        input[type="date"],
+        input[type="text"],
+        textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 16px;
+            font-family: inherit;
+            direction: rtl;
+            text-align: right;
+        }
+
+        textarea {
+            min-height: 80px;
+            resize: vertical;
+        }
+
+        .file-upload {
+            border: 2px dashed #667eea;
+            border-radius: 8px;
+            padding: 40px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: #f9f9f9;
+        }
+
+        .file-upload:hover {
+            background: #f0f0f0;
+            border-color: #5568d3;
+        }
+
+        .file-upload.dragover {
+            background: #e8eaf6;
+            border-color: #5568d3;
+        }
+
+        .file-upload input[type="file"] {
+            display: none;
+        }
+
+        .upload-icon {
+            font-size: 3em;
+            margin-bottom: 15px;
+        }
+
+        .file-name {
+            margin-top: 15px;
+            font-weight: 600;
+            color: #667eea;
+        }
+
+        .submit-btn {
+            width: 100%;
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 16px;
+            border-radius: 8px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .submit-btn:hover:not(:disabled) {
+            background: #5568d3;
+        }
+
+        .submit-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .message {
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .message.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .message.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .help-text {
+            font-size: 0.9em;
+            color: #666;
+            margin-top: 6px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="header-content">
+                <h1>העלאת פגישה חדשה / Upload New Meeting</h1>
+                <a href="/" class="back-btn">← חזרה / Back</a>
+            </div>
+        </header>
+
+        <div class="form-container">
+            <div id="message" class="message"></div>
+
+            <form id="uploadForm">
+                <div class="form-group">
+                    <label for="meetingDate">
+                        תאריך הפגישה / Meeting Date
+                    </label>
+                    <input type="date" id="meetingDate" name="date" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="audioFile">
+                        קובץ אודיו / Audio File
+                        <span class="label-sub">WAV, MP3, M4A, OGG, FLAC</span>
+                    </label>
+                    <div class="file-upload" id="fileUpload">
+                        <input type="file" id="audioFile" name="audio" accept=".wav,.mp3,.m4a,.ogg,.flac" required>
+                        <div class="upload-icon">🎤</div>
+                        <div>לחץ או גרור קובץ אודיו לכאן</div>
+                        <div>Click or drag audio file here</div>
+                        <div class="file-name" id="fileName"></div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="speakers">
+                        דוברים / Speakers
+                        <span class="label-sub">הפרד בפסיקים / Separate with commas</span>
+                    </label>
+                    <input type="text" id="speakers" name="speakers" placeholder="דובר 1, דובר 2, דובר 3 / Speaker 1, Speaker 2, Speaker 3">
+                    <div class="help-text">לדוגמה: יוסי כהן, שרה לוי, דוד אבני</div>
+                </div>
+
+                <div class="form-group">
+                    <label for="customWords">
+                        מילים מותאמות אישית / Custom Words
+                        <span class="label-sub">מילים מיוחדות לשיפור התמלול / Special words to improve transcription</span>
+                    </label>
+                    <textarea id="customWords" name="custom_words" placeholder="מילה1, מילה2, מילה3 / Word1, Word2, Word3"></textarea>
+                    <div class="help-text">הוסף מילים מקצועיות, שמות פרטיים או מונחים מיוחדים</div>
+                </div>
+
+                <div class="loading" id="loading">
+                    <div class="spinner"></div>
+                    <p style="margin-top: 15px;">מעלה קבצים... / Uploading files...</p>
+                </div>
+
+                <button type="submit" class="submit-btn" id="submitBtn">
+                    שלח לתמלול / Submit for Transcription
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const form = document.getElementById('uploadForm');
+        const fileUpload = document.getElementById('fileUpload');
+        const audioFile = document.getElementById('audioFile');
+        const fileName = document.getElementById('fileName');
+        const submitBtn = document.getElementById('submitBtn');
+        const loading = document.getElementById('loading');
+        const message = document.getElementById('message');
+
+        // File upload click handler
+        fileUpload.addEventListener('click', () => audioFile.click());
+
+        // File selection handler
+        audioFile.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                fileName.textContent = e.target.files[0].name;
+            }
+        });
+
+        // Drag and drop handlers
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            fileUpload.addEventListener(eventName, preventDefaults, false);
+        });
+
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+
+        ['dragenter', 'dragover'].forEach(eventName => {
+            fileUpload.addEventListener(eventName, () => {
+                fileUpload.classList.add('dragover');
+            }, false);
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            fileUpload.addEventListener(eventName, () => {
+                fileUpload.classList.remove('dragover');
+            }, false);
+        });
+
+        fileUpload.addEventListener('drop', (e) => {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            audioFile.files = files;
+            if (files.length > 0) {
+                fileName.textContent = files[0].name;
+            }
+        });
+
+        // Form submission
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const formData = new FormData(form);
+
+            // Show loading, hide submit button
+            loading.style.display = 'block';
+            submitBtn.disabled = true;
+            message.style.display = 'none';
+
+            try {
+                const response = await fetch('/api/meeting', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    showMessage('success', 'הפגישה נשלחה בהצלחה! / Meeting submitted successfully!');
+                    setTimeout(() => {
+                        window.location.href = '/meetings';
+                    }, 2000);
+                } else {
+                    throw new Error(data.error || 'Upload failed');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showMessage('error', 'שגיאה בהעלאה: ' + error.message + ' / Upload error: ' + error.message);
+                submitBtn.disabled = false;
+            } finally {
+                loading.style.display = 'none';
+            }
+        });
+
+        function showMessage(type, text) {
+            message.className = `message ${type}`;
+            message.textContent = text;
+            message.style.display = 'block';
+        }
+
+        // Set today's date as default
+        document.getElementById('meetingDate').valueAsDate = new Date();
+    </script>
+</body>
+</html>

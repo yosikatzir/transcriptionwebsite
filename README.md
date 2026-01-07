@@ -1,6 +1,26 @@
-# AI Transcription Editor
+# AI Transcription Editor System
 
-A web-based tool for secretaries to edit AI-generated meeting transcriptions with synchronized audio playback.
+A complete web application for managing and editing AI-generated meeting transcriptions with speaker diarization support.
+
+## Quick Start
+
+```bash
+cd transcriptionwebsite
+pip3 install -r requirements.txt
+python3 app.py
+```
+
+Then open http://localhost:5000 in your browser.
+
+**For detailed installation instructions, see [INSTALL.md](INSTALL.md)**
+
+## Overview
+
+This system provides a complete workflow for managing meeting transcriptions:
+1. **Upload meetings** with audio files
+2. **Process** with external AI transcription service
+3. **Edit** transcriptions with an intuitive interface
+4. **Export** finalized transcriptions
 
 ## Features
 
@@ -21,13 +41,39 @@ A web-based tool for secretaries to edit AI-generated meeting transcriptions wit
   - Condense multiple segments into single speaker turns
 - **Export**: Export edited transcription with speaker names to text file matching the output.txt format
 
-## How to Use on macOS
+## Application Structure
 
-### Opening the Application
+This is a Flask-based web application with multiple pages:
 
-1. Locate the `index.html` file in this folder
-2. Double-click `index.html` to open it in your default browser
-   - Or right-click and choose "Open With" → Safari/Chrome/Firefox
+- **Landing Page** (`/`) - Main entry point with navigation
+- **Meeting Upload** (`/upload`) - Create new meeting and upload audio
+- **Meetings List** (`/meetings`) - View all meetings and their status
+- **Transcription Editor** (`/editor/<meeting_id>`) - Edit transcriptions with audio sync
+
+## System Architecture
+
+```
+┌─────────────────┐
+│  Landing Page   │
+└────────┬────────┘
+         │
+    ┌────┴────┐
+    │         │
+┌───▼──┐  ┌──▼────┐
+│Upload│  │ List  │
+└───┬──┘  └──┬────┘
+    │        │
+    │    ┌───▼───┐
+    │    │Editor │
+    │    └───────┘
+    │
+┌───▼────────────┐
+│External AI     │
+│Transcription   │
+└────────────────┘
+```
+
+## How to Use
 
 ### Step-by-Step Workflow
 

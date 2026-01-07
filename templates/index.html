@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>מערכת עריכת תמלולים - Transcription Editor</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            width: 100%;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+
+        header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 60px 40px;
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 2.5em;
+            font-weight: 700;
+            margin-bottom: 15px;
+        }
+
+        .subtitle {
+            font-size: 1.2em;
+            opacity: 0.95;
+        }
+
+        .content {
+            padding: 50px 40px;
+        }
+
+        .functions-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin-top: 30px;
+        }
+
+        .function-card {
+            background: #f9f9f9;
+            border-radius: 12px;
+            padding: 40px 30px;
+            text-align: center;
+            transition: all 0.3s;
+            cursor: pointer;
+            border: 3px solid transparent;
+            text-decoration: none;
+            color: inherit;
+            display: block;
+        }
+
+        .function-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            border-color: #667eea;
+        }
+
+        .function-icon {
+            font-size: 4em;
+            margin-bottom: 20px;
+        }
+
+        .function-title {
+            font-size: 1.5em;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: #1d1d1f;
+        }
+
+        .function-description {
+            color: #666;
+            line-height: 1.6;
+        }
+
+        footer {
+            background: #f5f5f7;
+            padding: 20px;
+            text-align: center;
+            color: #666;
+            font-size: 0.9em;
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2em;
+            }
+
+            .content {
+                padding: 30px 20px;
+            }
+
+            .functions-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>מערכת עריכת תמלולים</h1>
+            <p class="subtitle">AI Transcription Editor System</p>
+        </header>
+
+        <div class="content">
+            <div class="functions-grid">
+                <a href="/upload" class="function-card">
+                    <div class="function-icon">📤</div>
+                    <h2 class="function-title">העלאת פגישה חדשה</h2>
+                    <p class="function-description">
+                        התחל תהליך חדש - העלה קובץ אודיו, הוסף מידע על הפגישה ושלח לתמלול
+                        <br><br>
+                        <strong>Upload New Meeting</strong><br>
+                        Start a new process - upload audio, add meeting info, and submit for transcription
+                    </p>
+                </a>
+
+                <a href="/meetings" class="function-card">
+                    <div class="function-icon">📋</div>
+                    <h2 class="function-title">רשימת פגישות</h2>
+                    <p class="function-description">
+                        צפה בכל הפגישות, סטטוס התמלול וערוך תמלולים
+                        <br><br>
+                        <strong>Meetings List</strong><br>
+                        View all meetings, transcription status, and edit transcriptions
+                    </p>
+                </a>
+            </div>
+        </div>
+
+        <footer>
+            <p>Transcription Editor System &copy; 2026</p>
+        </footer>
+    </div>
+</body>
+</html>

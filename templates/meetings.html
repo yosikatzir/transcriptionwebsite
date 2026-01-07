@@ -130,6 +130,16 @@
             color: #155724;
         }
 
+        .status-summarization_complete {
+            background: #e0d4f7;
+            color: #5a2d82;
+        }
+
+        .status-protocol_complete {
+            background: #fce4ec;
+            color: #880e4f;
+        }
+
         .meeting-actions {
             display: flex;
             gap: 10px;
@@ -277,7 +287,9 @@
             const statusText = {
                 'submitted': 'הוגש / Submitted',
                 'transcribed': 'תומלל / Transcribed',
-                'edited': 'נערך / Edited'
+                'edited': 'נערך / Edited',
+                'summarization_complete': 'סוכם / Summarization Complete',
+                'protocol_complete': 'פרוטוקול הושלם / Protocol Complete'
             };
 
             const statusClass = `status-${meeting.status}`;
@@ -302,7 +314,7 @@
                     <span class="status-badge ${statusClass}">${statusText[meeting.status]}</span>
                 </div>
                 <div class="meeting-actions">
-                    ${meeting.status === 'transcribed' || meeting.status === 'edited' ? `
+                    ${meeting.status !== 'submitted' ? `
                         <a href="/editor/${meeting.id}" class="btn btn-primary">ערוך תמלול / Edit</a>
                     ` : `
                         <button class="btn btn-primary" disabled>ממתין לתמלול / Waiting...</button>

@@ -30,8 +30,17 @@ def get_meeting_status(meeting_folder):
                     for f in os.listdir(meeting_folder))
     has_transcription = os.path.exists(os.path.join(meeting_folder, 'transcription.json'))
     has_edited = os.path.exists(os.path.join(meeting_folder, 'transcription_edited.json'))
+    has_summary = os.path.exists(os.path.join(meeting_folder, 'summary.txt')) or \
+                  os.path.exists(os.path.join(meeting_folder, 'summary.json'))
+    has_protocol = os.path.exists(os.path.join(meeting_folder, 'protocol.txt')) or \
+                   os.path.exists(os.path.join(meeting_folder, 'protocol.json'))
 
-    if has_edited:
+    # Status priority: protocol_complete > summarization_complete > edited > transcribed > submitted
+    if has_protocol:
+        return 'protocol_complete'
+    elif has_summary:
+        return 'summarization_complete'
+    elif has_edited:
         return 'edited'
     elif has_transcription:
         return 'transcribed'

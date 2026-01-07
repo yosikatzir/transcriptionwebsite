@@ -378,7 +378,7 @@
                 <div class="audio-controls">
                     <audio id="audioPlayer" controls></audio>
                     <div class="controls-buttons">
-                                                <button class="btn-assign" id="assignBtn" onclick="assignToSpeaker()" disabled>
+                        <button class="btn-assign" id="assignBtn" onclick="assignToSpeaker()" disabled>
                             Assign to Speaker
                         </button>
                         <button class="btn-export" id="saveBtn" onclick="saveTranscription()" disabled style="background: #10b981;">
@@ -389,6 +389,14 @@
                         </button>
                         <button class="btn-export" id="exportBtn" onclick="exportTranscription()" disabled>
                             Export Transcription
+                        </button>
+                    </div>
+                    <div class="controls-buttons" style="margin-top: 10px;">
+                        <button class="btn-export" id="summarizeBtn" onclick="summarizeMeeting()" disabled style="background: #8b5cf6;">
+                            סכם פגישה / Summarize Meeting
+                        </button>
+                        <button class="btn-export" id="protocolBtn" onclick="writeProtocol()" disabled style="background: #ec4899;">
+                            כתוב פרוטוקול / Write Protocol
                         </button>
                     </div>
                 </div>
@@ -881,6 +889,8 @@
                 document.getElementById('exportBtn').disabled = false;
                 document.getElementById('saveBtn').disabled = false;
                 document.getElementById('loadOriginalBtn').disabled = false;
+                document.getElementById('summarizeBtn').disabled = false;
+                document.getElementById('protocolBtn').disabled = false;
 
                 // Load audio
                 audioElement = document.getElementById('audioPlayer');
@@ -941,6 +951,20 @@
                 console.error('Error loading original transcription:', error);
                 alert('שגיאה בטעינת תמלול מקורי / Error loading original: ' + error.message);
             }
+        }
+
+        function summarizeMeeting() {
+            alert('סיכום הפגישה יתבצע בקרוב\nMeeting summarization coming soon!');
+            // TODO: Implement AI summarization
+            // This will call an AI service to generate a summary of the meeting
+            // and save it as summary.txt or summary.json
+        }
+
+        function writeProtocol() {
+            alert('כתיבת הפרוטוקול תתבצע בקרוב\nProtocol writing coming soon!');
+            // TODO: Implement protocol generation
+            // This will call an AI service to generate a formal protocol
+            // and save it as protocol.txt or protocol.json
         }
     </script>
 </body>
